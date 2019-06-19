@@ -19,6 +19,11 @@ library(lubridate)
 library(ggbeeswarm)
 library(DT)
 
+#+ knitr
+knitr::opts_chunk$set(dev = "png",
+                      cache = TRUE)
+
+
 #+ analysis 
 # 1) set up database connections and import functions: -----------
 source(here::here("src", 
@@ -65,11 +70,20 @@ df2.ed_visits_cleaned <-
 
 # str(df2.ed_visits_cleaned)
 
-df2.ed_visits_cleaned %>% 
-  datatable()
+df2.ed_visits_cleaned %>% datatable()
+
+# mean and sd: 
+df3.mean_and_sd <- 
+  df2.ed_visits_cleaned %>% 
+  group_by(year) %>% 
+  summarise(mean_visits = mean(ed_visits), 
+            sd_visits = sd(ed_visits))
+
+df3.mean_and_sd %>% datatable()
 
 
 # 3) plots: ------------
+# time series 
 df2.ed_visits_cleaned %>% 
   ggplot(aes(x = date, 
              y = ed_visits)) + 
@@ -79,7 +93,7 @@ df2.ed_visits_cleaned %>%
   theme(panel.grid.minor = element_line(colour = "grey95"), 
       panel.grid.major = element_line(colour = "grey95"))
       
-
+# facet by year
 df2.ed_visits_cleaned %>% 
   ggplot(aes(x = weekday, 
              y = ed_visits)) + 
@@ -103,7 +117,7 @@ df2.ed_visits_cleaned %>%
         axis.text.x = element_text(angle = 45, 
                                    hjust = 1))
 
-
+# facet by weekday
 df2.ed_visits_cleaned %>% 
   ggplot(aes(x = year, 
              y = ed_visits)) + 
@@ -127,6 +141,25 @@ df2.ed_visits_cleaned %>%
         axis.text.x = element_text(angle = 45, 
                                    hjust = 1))
 
+# density by year: 
+df2.ed_visits_cleaned %>% 
+  ggplot(aes(x = ed_visits)) + 
+  geom_density() + 
+  facet_wrap(~year) + 
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"),
+        axis.text.x = element_text(angle = 45, 
+                                   hjust = 1))
+
+# checking normality: 
+for (i in 0:2) {
+x <- df2.ed_visits_cleaned %>% 
+  filter(years_from_2017 == i) %>% 
+  pull(ed_visits) 
+
+qqnorm(x, main = paste("years from 2017 = ", i))
+qqline(x, col = "red")
+}
 
 
-            

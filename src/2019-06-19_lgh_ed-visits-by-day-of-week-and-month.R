@@ -18,6 +18,7 @@ library(DBI)
 library(lubridate)
 library(ggbeeswarm)
 library(DT)
+library(broom)
 
 #+ knitr
 knitr::opts_chunk$set(dev = "png",
@@ -57,7 +58,8 @@ df2.ed_visits_cleaned <-
                                           "Saturday", 
                                           "Sunday")), 
          years_from_2017 = as.factor(years_from_2017), 
-         year = as.factor(year)) %>% 
+         year = as.factor(year), 
+         month = as.factor(month)) %>% 
   
   rename(ed_visits = value) %>% 
   
@@ -163,3 +165,44 @@ qqline(x, col = "red")
 }
 
 
+# variation by month: 
+df2.ed_visits_cleaned %>% 
+  filter(weekday == "Monday", 
+         year %in% c("2017")) %>% 
+  ggplot(aes(x = weekday, 
+             y = ed_visits)) + 
+  geom_beeswarm() + 
+  facet_wrap(~month) + 
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"),
+        axis.text.x = element_text(angle = 45, 
+                                   hjust = 1))
+  
+
+
+
+
+#' ## Regression models 
+
+m1 <- lm(ed_visits ~ years_from_2017 + weekday + month, 
+         data = df2.ed_visits_cleaned)
+
+summary(m1)
+
+par(mfrow = c(2,2))
+plot(m1)
+par(mfrow = c(1,1))
+
+
+# glance(m1)
+# tidy(m1)
+# augment(m1) # %>% names
+# predict(m1, interval = "prediction")
+
+
+
+#' ## Notes
+#'
+#' Model suggests that variation from month to month is negiligible after
+#' accounting for weekday and year effects. 

@@ -8,6 +8,7 @@
 #'     keep_md: yes
 #'     code_folding: hide
 #'     toc: true
+#'     toc_float: true
 #' ---
 #' 
 
@@ -22,6 +23,8 @@ library(DT)
 library(broom)
 library(caret)
 library(kableExtra)
+library(scales)
+library(plotly)
 
 #+ knitr
 knitr::opts_chunk$set(dev = "png",
@@ -96,6 +99,7 @@ df3.mean_and_sd %>%
 #' \  
 #' \  
 
+#' 
 #' ## Exploratory plots
 
 # 3) plots: ------------
@@ -194,6 +198,36 @@ df2.ed_visits_cleaned %>%
                                    hjust = 1))
   
 
+# "Seasonality" plot 
+
+# set 
+x <- seq(0, 1, length.out = 7)
+cols <- seq_gradient_pal(low = "blue", 
+                         high = "red")(x)
+
+# show_col(cols)
+
+p <- df2.ed_visits_cleaned %>% 
+  filter(year == "2018") %>% 
+  group_by(month, 
+           weekday) %>% 
+  summarise(mean_visits = mean(ed_visits)) %>% 
+  ggplot(aes(x = month, 
+             y = mean_visits, 
+             group = weekday)) +
+  geom_line(aes(col = weekday)) + 
+  
+  scale_y_continuous(limits = c(0, 250), 
+                     expand = c(0, 0)) + 
+  
+  scale_color_manual(values = cols) + 
+  
+  theme_light() +
+  labs(title = "2018") + 
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+      panel.grid.major = element_line(colour = "grey95")); p 
+      
+# ggplotly(p)
 
 # 4) regression model 1: ----
 
@@ -303,7 +337,7 @@ df5.model.performance %>%
 #' \  
 #' \                
 
-
+#'  
 #' ## Model selection notes
 
 #' Including month, weekday *and* year is very likely to overfit - there's just

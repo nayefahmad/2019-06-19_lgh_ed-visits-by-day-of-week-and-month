@@ -19,6 +19,8 @@ library(lubridate)
 library(ggbeeswarm)
 library(DT)
 library(broom)
+library(caret)
+library(kableExtra)
 
 #+ knitr
 knitr::opts_chunk$set(dev = "png",
@@ -185,24 +187,55 @@ df2.ed_visits_cleaned %>%
 
 #' ## Regression models 
 
+#+ models
+v1_train_index <- createDataPartition(df2.ed_visits_cleaned$ed_visits, 
+                                      p = 0.8, 
+                                      list = FALSE)
+
 m1 <- lm(ed_visits ~ years_from_2017 + weekday + month, 
-         data = df2.ed_visits_cleaned)
+         data = df2.ed_visits_cleaned[v1_train_index, ])
 
 summary(m1)
+
 
 par(mfrow = c(2,2))
 plot(m1)
 par(mfrow = c(1,1))
 
 
-# glance(m1)
+# glance(m1) 
 # tidy(m1)
 # augment(m1) # %>% names
 # predict(m1, interval = "prediction")
 
+m1.train_rmse <- sqrt(mean(resid(m1)^2))
+
+
+
+# test set performance: 
+df4.predictions <- 
+  data.frame(ed_visits = df2.ed_visits_cleaned[-v1_train_index, 6], 
+             predicted = predict(m1, 
+                                 newdata = df2.ed_visits_cleaned[-v1_train_index, ])) 
+
+m1.test_rmse <- sqrt(mean((df4.predictions$predicted - df4.predictions$ed_visits)^2))
+
+df5.model.performance <- 
+  data.frame(metric = c("Train RMSE", 
+                        "Test RMSE"), 
+             value = c(m1.train_rmse, 
+                       m1.test_rmse)) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+              "condensed", 
+              "responsive"))
+              
 
 
 #' ## Notes
 #'
 #' Model suggests that variation from month to month is negiligible after
-#' accounting for weekday and year effects. 
+#' accounting for weekday and year effects.
+#'
+#' Including month, weekday *and* year is very likely to overfit - there's just
+#' 4 data points per cell!! 

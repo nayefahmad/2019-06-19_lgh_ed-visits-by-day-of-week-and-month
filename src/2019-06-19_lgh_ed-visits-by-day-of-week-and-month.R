@@ -7,6 +7,7 @@
 #'   html_document: 
 #'     keep_md: yes
 #'     code_folding: hide
+#'     toc: true
 #' ---
 #' 
 
@@ -37,6 +38,7 @@ source(here::here("src",
 
 setup_denodo()
 
+#' ## Data 
 
 # 2) pull ed data: -----------
 df1.ed_visits <- extract_ed_visits("20170101",  # todo: earlier start? 
@@ -86,8 +88,15 @@ df3.mean_and_sd <-
   summarise(mean_visits = mean(ed_visits), 
             sd_visits = sd(ed_visits))
 
-df3.mean_and_sd %>% datatable()
+df3.mean_and_sd %>% 
+  datatable() %>% 
+  formatRound(2:3, 2)
 
+#' \  
+#' \  
+#' \  
+
+#' ## Exploratory plots
 
 # 3) plots: ------------
 # time series 
@@ -250,10 +259,10 @@ plot(m2)
 par(mfrow = c(1,1))
 
 
-# glance(m1) 
-# tidy(m1)
-# augment(m1) # %>% names
-# predict(m1, interval = "prediction")
+# glance(m2) 
+# tidy(m2)
+# augment(m2) # %>% names
+# predict(m2, interval = "prediction")
 
 m2.train_rmse <- sqrt(mean(resid(m2)^2))
 
@@ -289,13 +298,50 @@ df5.model.performance %>%
   kable_styling(bootstrap_options = c("striped",
               "condensed", 
               "responsive"))
-              
+
+#' \  
+#' \  
+#' \                
 
 
-#' ## Notes
-#'
+#' ## Model selection notes
+
 #' Including month, weekday *and* year is very likely to overfit - there's just
 #' 4 data points per cell!!
 #'
 #' The general strategy to prevent overfitting is, of course, cross-validation
 #' or a train/test split
+
+
+#' \  
+#' \  
+#' \  
+
+
+# 6) train model 2 on full dataset: -----------
+
+#' ## Train selected model on full dataset
+
+m3.full_dataset <- lm(ed_visits ~ years_from_2017 + weekday + month + lag_ed_visits, 
+                      data = df2.ed_visits_cleaned)
+
+summary(m3.full_dataset)
+
+glance(m3.full_dataset) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+              "condensed", 
+              "responsive"))
+
+tidy(m3.full_dataset) %>% 
+  mutate(lower_ci = estimate - 1.96 * std.error, 
+         upper_ci = estimate + 1.96 * std.error) %>% 
+  
+  select(term, 
+         lower_ci, 
+         estimate, 
+         upper_ci, 
+         everything()) %>% 
+  
+  datatable() %>% 
+  formatRound(2:7, 2)

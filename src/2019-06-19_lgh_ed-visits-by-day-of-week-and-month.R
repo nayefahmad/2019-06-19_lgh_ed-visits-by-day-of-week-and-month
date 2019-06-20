@@ -65,12 +65,15 @@ df2.ed_visits_cleaned <-
   
   rename(ed_visits = value) %>% 
   
+  mutate(lag_ed_visits = lag(ed_visits)) %>% 
+  
   select(date, 
          years_from_2017, 
          month, 
          year, 
          weekday, 
-         ed_visits)
+         ed_visits, 
+         lag_ed_visits)
 
 # str(df2.ed_visits_cleaned)
 
@@ -183,16 +186,20 @@ df2.ed_visits_cleaned %>%
   
 
 
-
+# 4) regression model 1: ----
 
 #' ## Regression models 
 
 #+ models
+
+#' ### With interaction between month and weekday 
+#' 
+set.seed(121)
 v1_train_index <- createDataPartition(df2.ed_visits_cleaned$ed_visits, 
                                       p = 0.8, 
                                       list = FALSE)
 
-m1 <- lm(ed_visits ~ years_from_2017 + weekday + month, 
+m1 <- lm(ed_visits ~ years_from_2017 + weekday + month + lag_ed_visits + weekday:month, 
          data = df2.ed_visits_cleaned[v1_train_index, ])
 
 summary(m1)
@@ -218,13 +225,66 @@ df4.predictions <-
              predicted = predict(m1, 
                                  newdata = df2.ed_visits_cleaned[-v1_train_index, ])) 
 
-m1.test_rmse <- sqrt(mean((df4.predictions$predicted - df4.predictions$ed_visits)^2))
+m1.test_rmse <- sqrt(mean((df4.predictions$predicted - df4.predictions$ed_visits)^2, 
+                          na.rm = TRUE))
+
+
+
+# 5) regression model 2: ----
+
+#' ### Without interaction between month and weekday 
+#' 
+set.seed(121)
+v1_train_index <- createDataPartition(df2.ed_visits_cleaned$ed_visits, 
+                                      p = 0.8, 
+                                      list = FALSE)
+
+m2 <- lm(ed_visits ~ years_from_2017 + weekday + month + lag_ed_visits, 
+         data = df2.ed_visits_cleaned[v1_train_index, ])
+
+summary(m2)
+
+
+par(mfrow = c(2,2))
+plot(m2)
+par(mfrow = c(1,1))
+
+
+# glance(m1) 
+# tidy(m1)
+# augment(m1) # %>% names
+# predict(m1, interval = "prediction")
+
+m2.train_rmse <- sqrt(mean(resid(m2)^2))
+
+
+
+# test set performance: 
+df4.predictions <- 
+  data.frame(ed_visits = df2.ed_visits_cleaned[-v1_train_index, 6], 
+             predicted = predict(m2, 
+                                 newdata = df2.ed_visits_cleaned[-v1_train_index, ])) 
+
+m2.test_rmse <- sqrt(mean((df4.predictions$predicted - df4.predictions$ed_visits)^2, 
+                          na.rm = TRUE))
+
+
+#' ## Summary of models
 
 df5.model.performance <- 
-  data.frame(metric = c("Train RMSE", 
-                        "Test RMSE"), 
+  data.frame(model = c("year + month + weekday + month:weekday", 
+                       "year + month + weekday + month:weekday", 
+                       "year + month + weekday", 
+                       "year + month + weekday"), 
+             metric = rep(c("Train RMSE", 
+                            "Test RMSE"), 2), 
              value = c(m1.train_rmse, 
-                       m1.test_rmse)) %>% 
+                       m1.test_rmse, 
+                       m2.train_rmse, 
+                       m2.test_rmse)) 
+
+
+df5.model.performance %>% 
   kable() %>% 
   kable_styling(bootstrap_options = c("striped",
               "condensed", 
@@ -234,8 +294,8 @@ df5.model.performance <-
 
 #' ## Notes
 #'
-#' Model suggests that variation from month to month is negiligible after
-#' accounting for weekday and year effects.
-#'
 #' Including month, weekday *and* year is very likely to overfit - there's just
-#' 4 data points per cell!! 
+#' 4 data points per cell!!
+#'
+#' The general strategy to prevent overfitting is, of course, cross-validation
+#' or a train/test split

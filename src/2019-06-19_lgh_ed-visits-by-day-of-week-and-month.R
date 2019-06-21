@@ -24,7 +24,6 @@ library(broom)
 library(caret)
 library(kableExtra)
 library(scales)
-library(plotly)
 
 #+ knitr
 knitr::opts_chunk$set(dev = "png",
@@ -45,7 +44,7 @@ setup_denodo()
 
 # 2) pull ed data: -----------
 df1.ed_visits <- extract_ed_visits("20170101",  # todo: earlier start? 
-                                   "201906017")
+                                   "20190617")
 
 df2.ed_visits_cleaned <- 
   df1.ed_visits %>% 
@@ -64,7 +63,7 @@ df2.ed_visits_cleaned <-
                                           "Friday",
                                           "Saturday", 
                                           "Sunday")), 
-         years_from_2017 = as.factor(years_from_2017), 
+         # years_from_2017 = as.factor(years_from_2017), 
          year = as.factor(year), 
          month = as.factor(month)) %>% 
   
@@ -80,7 +79,7 @@ df2.ed_visits_cleaned <-
          ed_visits, 
          lag_ed_visits)
 
-# str(df2.ed_visits_cleaned)
+str(df2.ed_visits_cleaned)
 
 df2.ed_visits_cleaned %>% datatable()
 
@@ -379,3 +378,4 @@ tidy(m3.full_dataset) %>%
   
   datatable() %>% 
   formatRound(2:7, 2)
+

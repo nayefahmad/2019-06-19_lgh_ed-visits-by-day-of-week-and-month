@@ -81,12 +81,7 @@ df2.ed_visits_cleaned <-
 
 str(df2.ed_visits_cleaned)
 
-df2.ed_visits_cleaned %>% 
-  kable() %>% 
-  kable_styling(bootstrap_options = c("striped",
-              "condensed", 
-              "responsive"))
-              
+df2.ed_visits_cleaned %>% datatable()
 
 # mean and sd: 
 df3.mean_and_sd <- 

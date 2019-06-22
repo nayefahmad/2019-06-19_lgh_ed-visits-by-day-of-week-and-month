@@ -366,7 +366,8 @@ glance(m3.full_dataset) %>%
               "condensed", 
               "responsive"))
 
-tidy(m3.full_dataset) %>% 
+df6.coeffs <- 
+  tidy(m3.full_dataset) %>% 
   mutate(lower_ci = estimate - 1.96 * std.error, 
          upper_ci = estimate + 1.96 * std.error) %>% 
   
@@ -374,8 +375,128 @@ tidy(m3.full_dataset) %>%
          lower_ci, 
          estimate, 
          upper_ci, 
-         everything()) %>% 
-  
+         everything()) 
+
+df6.coeffs %>% 
   datatable() %>% 
   formatRound(2:7, 2)
+
+
+#' \  
+#' \  
+#' \  
+
+
+#' 
+#' ## Visuals of day of week effects 
+#' 
+
+#+ day-of-week-plot
+# 7) visuals of day of week effects ----------
+
+df6.coeffs %>% 
+  filter(grepl("weekday", term)) %>% 
+  
+  mutate(term = substring(term, 8)) %>% 
+  mutate(term = factor(term, 
+                       levels = c("Monday", 
+                                  "Tuesday", 
+                                  "Wednesday", 
+                                  "Thursday", 
+                                  "Friday",
+                                  "Saturday", 
+                                  "Sunday"))) %>% 
+  
+  ggplot()  +
+  geom_pointrange(aes(x = term, 
+                      ymin = lower_ci, 
+                      ymax = upper_ci, 
+                      y = estimate)) + 
+  geom_hline(yintercept = 0) + 
+  
+  scale_y_continuous(limits = c(-20, 20), 
+                     breaks = seq(-20, 20, 4)) + 
+  
+  labs(x = "Day of week", 
+       y = "Difference in average daily ED visits" ,
+       title = "LGH ED: Day-of-week effects on average daily ED visits", 
+       subtitle = "Baseline - Monday", 
+       caption = "\n\nNote: There is no significant interaction between day-of-week effects and month effects") + 
+  
+  theme_light(base_size = 12) +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+      panel.grid.major = element_line(colour = "grey95"))
+      
+
+#' \  
+#' \  
+#' \  
+
+
+#'
+#' ## Visuals of month effects
+#'
+
+#+ month-plot
+# 8) visuals of month effects ----------
+
+df6.coeffs %>% 
+  filter(grepl("month", term)) %>% 
+  
+  mutate(term = factor(term,
+                       levels = c(
+                         "month2", 
+                         "month3", 
+                         "month4", 
+                         "month5", 
+                         "month6", 
+                         "month7", 
+                         "month8", 
+                         "month9", 
+                         "month10", 
+                         "month11", 
+                         "month12"
+                       ))) %>% 
+
+  
+  ggplot()  +
+  geom_pointrange(aes(x = term, 
+                      ymin = lower_ci, 
+                      ymax = upper_ci, 
+                      y = estimate)) + 
+  geom_hline(yintercept = 0) + 
+  
+  scale_y_continuous(limits = c(-20, 20), 
+                     breaks = seq(-20, 20, 4)) + 
+  
+  
+  labs(x = "Month", 
+       y = "Difference in average daily ED visits" ,
+       title = "LGH ED: Month effects on average daily ED visits", 
+       subtitle = "Baseline - January", 
+       caption = "\n\nNote: There is no significant interaction between day-of-week effects and month effects") + 
+  
+  theme_light(base_size = 12) +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"), 
+        axis.text.x = element_text(angle = 45, 
+                                   hjust = 1)) 
+
+
+    
+
+
+
+
+
+
+# 9) write outputs: ---------
+# write_csv(df6.coeffs,
+#           here::here("results", 
+#                      "dst", 
+#                      "2019-06-21_lgh_ed-visits-regression-coeffs.csv"))
+              
+
+
+
 

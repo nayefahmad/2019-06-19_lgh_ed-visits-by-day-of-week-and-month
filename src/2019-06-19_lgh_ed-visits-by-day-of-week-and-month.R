@@ -190,6 +190,7 @@ df2.ed_visits_cleaned %>%
              y = ed_visits)) + 
   geom_beeswarm() + 
   facet_wrap(~month) + 
+  labs(title = "2018") + 
   theme_light() +
   theme(panel.grid.minor = element_line(colour = "grey95"), 
         panel.grid.major = element_line(colour = "grey95"),
@@ -208,7 +209,7 @@ df2.ed_visits_cleaned %>%
              group = weekday)) + 
   geom_point(size = 5, 
              col = "dodgerblue4") + 
-  
+  labs(title = "2018") + 
   theme_light() +
   theme(panel.grid.minor = element_line(colour = "grey95"), 
       panel.grid.major = element_line(colour = "grey95"))
@@ -225,7 +226,7 @@ df2.ed_visits_cleaned %>%
              group = month)) + 
   geom_point(size = 5, 
              col = "dodgerblue4") + 
-  
+  labs(title = "2018") + 
   theme_light() +
   theme(panel.grid.minor = element_line(colour = "grey95"), 
         panel.grid.major = element_line(colour = "grey95"))
@@ -250,7 +251,7 @@ p <- df2.ed_visits_cleaned %>%
              y = mean_visits, 
              group = weekday)) +
   geom_line(aes(col = weekday)) + 
-  
+  labs(title = "2018") + 
   scale_y_continuous(limits = c(0, 250), 
                      expand = c(0, 0)) + 
   

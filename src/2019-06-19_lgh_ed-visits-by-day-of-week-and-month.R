@@ -182,10 +182,10 @@ qqline(x, col = "red")
 }
 
 
-# variation by month: 
+# variation by month (4 data points per cell): 
 df2.ed_visits_cleaned %>% 
   filter(weekday == "Monday", 
-         year %in% c("2017")) %>% 
+         year %in% c("2018")) %>% 
   ggplot(aes(x = weekday, 
              y = ed_visits)) + 
   geom_beeswarm() + 
@@ -196,6 +196,41 @@ df2.ed_visits_cleaned %>%
         axis.text.x = element_text(angle = 45, 
                                    hjust = 1))
   
+
+# simple average by day of week
+df2.ed_visits_cleaned %>% 
+  filter(year == "2018") %>% 
+  group_by(weekday) %>% 
+  summarise(mean_visits = mean(ed_visits)) %>% 
+  
+  ggplot(aes(x = weekday, 
+             y = mean_visits ,
+             group = weekday)) + 
+  geom_point(size = 5, 
+             col = "dodgerblue4") + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+      panel.grid.major = element_line(colour = "grey95"))
+      
+
+# simple average by month
+df2.ed_visits_cleaned %>% 
+  filter(year == "2018") %>% 
+  group_by(month) %>% 
+  summarise(mean_visits = mean(ed_visits)) %>% 
+  
+  ggplot(aes(x = month, 
+             y = mean_visits ,
+             group = month)) + 
+  geom_point(size = 5, 
+             col = "dodgerblue4") + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"))
+
+
 
 # "Seasonality" plot 
 
@@ -227,6 +262,34 @@ p <- df2.ed_visits_cleaned %>%
       panel.grid.major = element_line(colour = "grey95")); p 
       
 # ggplotly(p)
+
+
+# avg ED visits by weekday AND month
+# this is the type of plot that I am arguing against - it's all noise
+
+df2.ed_visits_cleaned %>% 
+  filter(year == "2018") %>% 
+  group_by(month, 
+           weekday) %>% 
+  summarise(mean_visits = mean(ed_visits)) %>% 
+  
+  ggplot(aes(x = weekday, 
+             y = mean_visits)) + 
+  geom_col(fill = "dodgerblue4") + 
+  facet_wrap(~month) + 
+  
+  labs(title = "Is there really any point in looking at graphs like this?") + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+      panel.grid.major = element_line(colour = "grey95"), 
+      axis.text.x = element_text(angle = 45, 
+                                 hjust = 1))
+    
+  
+
+
+
 
 # 4) regression model 1: ----
 
@@ -419,8 +482,8 @@ df6.coeffs %>%
   
   labs(x = "Day of week", 
        y = "Difference in average daily ED visits" ,
-       title = "LGH ED: Day-of-week effects on average daily ED visits", 
-       subtitle = "Baseline - Monday", 
+       title = "LGH ED \nImpact of Day of Week on average daily ED visits", 
+       subtitle = "These estimates control for year and month, allowing us to isolate weekday effects \nfrom other factors and from statistical noise \n\nBaseline - Monday", 
        caption = "\n\nNote: There is no significant interaction between day-of-week effects and month effects") + 
   
   theme_light(base_size = 12) +
@@ -472,8 +535,8 @@ df6.coeffs %>%
   
   labs(x = "Month", 
        y = "Difference in average daily ED visits" ,
-       title = "LGH ED: Month effects on average daily ED visits", 
-       subtitle = "Baseline - January", 
+       title = "LGH ED \nImpact of Month on average daily ED visits", 
+       subtitle = "These estimates control for year and day-of-week, allowing us to isolate month effects \nfrom other factors and from statistical noise \n\nBaseline - January", 
        caption = "\n\nNote: There is no significant interaction between day-of-week effects and month effects") + 
   
   theme_light(base_size = 12) +

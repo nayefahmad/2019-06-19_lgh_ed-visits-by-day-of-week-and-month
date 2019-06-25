@@ -561,6 +561,10 @@ df6.coeffs %>%
 #                      "2019-06-21_lgh_ed-visits-regression-coeffs.csv"))
               
 
-
+# write_csv(df6.coeffs,
+#           here::here("results", 
+#                      "dst", 
+#                      "2019-06-24_lgh_ed-visits-regression-coeffs.csv"))
+             
 
 

@@ -200,7 +200,7 @@ summary(fit2017)
 plot(fit2017)
 
 #'
-#' ### Fitting normal dist to 2017 data
+#' ### Fitting normal dist to 2018 data
 #'
 
 fit2018 <- 

@@ -23,7 +23,7 @@ extract_ed_visits <- function(startdate_id,
            start_date_id >= startdate_id, 
            start_date_id <= enddate_id) %>% 
     
-    select(start_date_id, 
+    dplyr::select(start_date_id, 
            patient_id, 
            facility_name) %>%  # show_query()
     
@@ -54,5 +54,5 @@ extract_ed_visits <- function(startdate_id,
 # test the function: ------
 # library(beepr)
 # 
-# edvisits <- extract_ed_visits("20181212", 
+# edvisits <- extract_ed_visits("20181212",
 #                               "20181220"); beep()

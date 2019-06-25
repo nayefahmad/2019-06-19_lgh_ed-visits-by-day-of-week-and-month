@@ -182,6 +182,38 @@ qqline(x, col = "red")
 }
 
 
+
+# 3.1) fitting normal distributions --------
+
+#'
+#' ### Fitting normal dist to 2017 data
+#'
+
+fit2017 <- 
+  df2.ed_visits_cleaned %>% 
+  filter(year == "2017") %>% 
+  pull(ed_visits) %>% 
+  fitdistrplus::fitdist("norm")
+  
+# str(fit2017)
+summary(fit2017)
+plot(fit2017)
+
+#'
+#' ### Fitting normal dist to 2017 data
+#'
+
+fit2018 <- 
+  df2.ed_visits_cleaned %>% 
+  filter(year == "2018") %>% 
+  pull(ed_visits) %>% 
+  fitdistrplus::fitdist("norm")
+
+# str(fit2018)
+summary(fit2018)
+plot(fit2018)
+
+
 # variation by month (4 data points per cell): 
 df2.ed_visits_cleaned %>% 
   filter(weekday == "Monday", 
@@ -435,7 +467,7 @@ df6.coeffs <-
   mutate(lower_ci = estimate - 1.96 * std.error, 
          upper_ci = estimate + 1.96 * std.error) %>% 
   
-  select(term, 
+  dplyr::select(term, 
          lower_ci, 
          estimate, 
          upper_ci, 

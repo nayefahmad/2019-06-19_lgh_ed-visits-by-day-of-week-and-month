@@ -5,7 +5,7 @@
 #*****************************************************
 
 # function definition: 
-extract_ed_visits <- function(startdate_id, 
+extract_ed_visits_by_hour <- function(startdate_id, 
                               enddate_id, 
                               site = "Lions Gate Hospital", 
                               denodo_vw = vw_eddata){
@@ -24,18 +24,21 @@ extract_ed_visits <- function(startdate_id,
            start_date_id <= enddate_id) %>% 
     
     dplyr::select(start_date_id, 
-           patient_id, 
-           facility_name) %>%  # show_query()
+                  interval_1_hour_at_start_date, 
+                  patient_id, 
+                  facility_name) %>%  # show_query()
     
     collect() %>% 
     
-    group_by(start_date_id) %>%
+    group_by(start_date_id, 
+             interval_1_hour_at_start_date) %>%
     summarise(num_ED_visits = n())  
     
     # long format, matching with census results: 
   eddata %>%   
-    mutate(nursing_unit_cd = rep(NA, nrow(eddata))) %>% 
+    mutate(nursing_unit_cd = NA) %>% 
     select(start_date_id, 
+           interval_1_hour_at_start_date, 
            nursing_unit_cd, 
            num_ED_visits) %>% 
     rename(date_id = start_date_id) %>% 
@@ -43,7 +46,9 @@ extract_ed_visits <- function(startdate_id,
     # display in long format: 
     gather(key = "metric",
            value = "value", 
-           -c(date_id, nursing_unit_cd))
+           -c(date_id, 
+              nursing_unit_cd, 
+              interval_1_hour_at_start_date))
   
   
 }
@@ -54,5 +59,5 @@ extract_ed_visits <- function(startdate_id,
 # test the function: ------
 # library(beepr)
 # 
-# edvisits <- extract_ed_visits("20181212",
-#                               "20181220"); beep()
+edvisits <- extract_ed_visits_by_hour("20190101",
+                                      "20190103"); beep()

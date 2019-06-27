@@ -67,6 +67,7 @@ extract_ed_visits_by_hour <- function(startdate_id,
   
   # join ed data on dates df: 
   eddata %>% 
+    ungroup() %>% 
     right_join(dates_df, by = c("date" = "dates", 
                                 "interval_1_hour_at_start_date" = "hours")) %>% 
     mutate(date_id_complete = gsub("-", 
@@ -86,7 +87,7 @@ extract_ed_visits_by_hour <- function(startdate_id,
 # test the function: ------
 # library(beepr)
 # 
-edvisits_by_hour <- extract_ed_visits_by_hour("20190101",
-                                              "20190103"); beep()
-
-str(edvisits_by_hour)
+# edvisits_by_hour <- extract_ed_visits_by_hour("20180101",
+#                                               "20190105")  # ; beep()
+# 
+# str(edvisits_by_hour)

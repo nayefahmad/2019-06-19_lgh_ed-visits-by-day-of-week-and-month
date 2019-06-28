@@ -462,6 +462,29 @@ glance(m3.full_dataset) %>%
               "condensed", 
               "responsive"))
 
+# actual vs fitted values: 
+augment(m3.full_dataset) %>% 
+  ggplot(aes(x = .fitted, 
+             y = ed_visits)) + 
+  geom_point() + 
+  
+  scale_x_continuous(limits = c(150, 210)) + 
+  scale_y_continuous(limits = c(150, 210)) + 
+  
+  geom_smooth() + 
+  geom_abline(slope = 1, 
+              intercept = 0) + 
+  
+  labs(x = "predicted values", 
+       y = "actual values",
+       title = "LGH ED visits - Prediction using day of week, month, year, and previous day's ED visits") + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"))
+
+
+
 df6.coeffs <- 
   tidy(m3.full_dataset) %>% 
   mutate(lower_ci = estimate - 1.96 * std.error, 
@@ -598,5 +621,82 @@ df6.coeffs %>%
 #                      "dst", 
 #                      "2019-06-24_lgh_ed-visits-regression-coeffs.csv"))
              
+
+
+
+#'
+#' ## Appendix: Null models 
+#' 
+
+# only month 
+m4.month <- lm(ed_visits ~ month,
+               data = df2.ed_visits_cleaned)
+
+summary(m4.month)
+
+glance(m4.month) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+                                      "condensed", 
+                                      "responsive"))
+
+augment(m4.month) %>% 
+  ggplot(aes(x = .fitted, 
+             y = ed_visits, 
+             col = month)) + 
+  geom_point() + 
+  
+  scale_x_continuous(limits = c(150, 210)) + 
+  scale_y_continuous(limits = c(150, 210)) + 
+  
+  geom_smooth() + 
+  geom_abline(slope = 1, 
+              intercept = 0) + 
+  
+  labs(x = "predicted values", 
+       y = "actual values") + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"))
+
+
+
+
+
+# only day of week 
+m5.weekday <- lm(ed_visits ~ weekday,
+               data = df2.ed_visits_cleaned)
+
+summary(m5.weekday)
+
+glance(m5.weekday) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+                                      "condensed", 
+                                      "responsive"))
+
+augment(m5.weekday) %>% 
+  ggplot(aes(x = .fitted, 
+             y = ed_visits ,
+             col = weekday)) + 
+  geom_point() + 
+  
+  scale_x_continuous(limits = c(150, 210)) + 
+  scale_y_continuous(limits = c(150, 210)) + 
+  
+  geom_abline(slope = 1, 
+              intercept = 0) + 
+  
+  geom_smooth(col = "red") + 
+  
+  labs(x = "predicted values", 
+       y = "actual values", 
+       title = "LGH daily ED visits, by day of week") + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"))
+
 
 

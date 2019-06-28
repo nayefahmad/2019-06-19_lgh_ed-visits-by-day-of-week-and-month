@@ -92,9 +92,21 @@ df2.ed_visits_cleaned <-
          lag5_ed_visits, 
          lag6_ed_visits)
 
+# add hour_int column: 
+days <- df2.ed_visits_cleaned$date %>% unique() %>% length()
+
+df2.ed_visits_cleaned <- 
+  df2.ed_visits_cleaned %>% 
+  mutate(hour_int = rep(1:24, 
+                        days))
+
+
+# result: 
 str(df2.ed_visits_cleaned)
 
-df2.ed_visits_cleaned %>% datatable()
+df2.ed_visits_cleaned %>%
+  head(100) %>% 
+  datatable()
 
 # mean and sd: 
 df3.mean_and_sd <- 
@@ -108,6 +120,12 @@ df3.mean_and_sd <-
 df3.mean_and_sd %>% 
   datatable() %>% 
   formatRound(2:3, 1)
+
+
+#' ## Notes - Poisson?
+#'
+#' Mean and variance aren't really close for most hours. Does this mean that
+#' arrival rate isn't really Poisson-distributed?
 
 #' \  
 #' \  
@@ -168,21 +186,69 @@ df2.ed_visits_cleaned %>%
 
 
 
-#' ## Notes - distribution of response variable 
+#' ## Notes - distribution of response variable
 #'
 #' Unfortunately, this is very non-normal.
 #'
 #' **Hypothesis**: this is a mixture of two normal distributions: one for
-#' "late-night" rates, one for rest of the day (todo:). 
+#' "late-night" rates, one for rest of the day.
+#'
+#' Let's start by analyzing visits over the period 8 AM to midnight. This seems
+#' to give a reasonable distribution.
+#'
+#'
 #' 
 
 
+# density for "busy" hours: 
+df2.ed_visits_cleaned %>% 
+  filter(hour_int >= 8, 
+         hour_int <= 24) %>% 
+  ggplot(aes(x = ed_visits)) + 
+  geom_density() + 
+  facet_wrap(~year) + 
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"),
+        axis.text.x = element_text(angle = 45, 
+                                   hjust = 1))
+
+
+# compare with poisson curves: 
+# mean_visits_from_5am <- 
+#   df2.ed_visits_cleaned %>% 
+#   filter(year == "2018", 
+#          hour_int >= 5, 
+#          hour_int <= 24) %>% 
+#   pull(ed_visits) %>% 
+#   mean(na.rm = TRUE)
+# 
+# x <- rpois(1000, mean_visits_from_5am)
+# x %>% density() %>% plot(main = paste("Poisson with mean", round(mean_visits_from_5am, 2)))
 
 
 
+# plots for each hour of day in 2018 
+df4.nest_by_hour <- 
+  df2.ed_visits_cleaned %>% 
+  filter(year == "2018") %>% 
+  group_by(hour_int) %>% 
+  nest %>% 
+  
+  mutate(density = map2(data, 
+                        hour_int, 
+                        function(x, y){
+                         ggplot(x, 
+                                aes(x = ed_visits)) + 
+                           geom_density() + 
+                           labs(title = y %>% as.character())
+                       }))
 
-
-
+par(mfrow = c(3,3))
+df4.nest_by_hour$density[8:24]
+par(mfrow = c(1,1))
+ 
+ 
 #' ## Variation by day of week
 #' 
 #' 

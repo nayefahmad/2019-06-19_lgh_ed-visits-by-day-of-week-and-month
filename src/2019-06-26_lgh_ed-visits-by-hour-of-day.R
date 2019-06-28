@@ -117,32 +117,6 @@ df3.mean_and_sd %>%
 #' ## Exploratory plots
 
 # 3) plots: ------------
-# set colours for days of week 
-x <- seq(0, 1, length.out = 7)
-cols <- seq_gradient_pal(low = "blue", 
-                         high = "red")(x)
-
-# hour of day, split by day of week 
-p <- 
-  df2.ed_visits_cleaned %>% 
-  group_by(hour, 
-           weekday) %>% 
-  summarize(mean_visits = mean(ed_visits, na.rm = T)) %>% 
-  ggplot(aes(x = hour, 
-             y = mean_visits, 
-             group = weekday, 
-             col = weekday)) + 
-  geom_line() + 
-  scale_color_manual(values = cols) +
-  theme_light() +
-  theme(panel.grid.minor = element_line(colour = "grey95"), 
-        panel.grid.major = element_line(colour = "grey95"), 
-        axis.text.x = element_text(angle = 45, 
-                                   hjust = 1)); p
-
-# ggplotly(p)
-
-     
 # facet by year
 df2.ed_visits_cleaned %>% 
   ggplot(aes(x = hour, 
@@ -168,31 +142,18 @@ df2.ed_visits_cleaned %>%
                                    hjust = 1))
 
 
-
-
-# todo: continue from here
-
-
-
-
-
-
-
-
-
-
-
-
 df2.ed_visits_cleaned %>% 
   ggplot(aes(x = year, 
              y = ed_visits)) + 
   geom_boxplot() + 
   facet_wrap(~weekday) + 
+  labs(title = "hourly arrival rate by year") + 
   theme_light() +
   theme(panel.grid.minor = element_line(colour = "grey95"), 
         panel.grid.major = element_line(colour = "grey95"),
         axis.text.x = element_text(angle = 45, 
                                    hjust = 1))
+
 
 # density by year: 
 df2.ed_visits_cleaned %>% 
@@ -205,57 +166,58 @@ df2.ed_visits_cleaned %>%
         axis.text.x = element_text(angle = 45, 
                                    hjust = 1))
 
-# checking normality: 
-for (i in 0:2) {
-x <- df2.ed_visits_cleaned %>% 
-  filter(years_from_2017 == i) %>% 
-  pull(ed_visits) 
-
-qqnorm(x, main = paste("years from 2017 = ", i))
-qqline(x, col = "red")
-}
 
 
-
-# 3.1) fitting normal distributions --------
-
+#' ## Notes - distribution of response variable 
 #'
-#' ### Fitting normal dist to 2017 data
+#' Unfortunately, this is very non-normal.
 #'
+#' **Hypothesis**: this is a mixture of two normal distributions: one for
+#' "late-night" rates, one for rest of the day (todo:). 
+#' 
 
-fit2017 <- 
+
+
+
+
+
+
+
+#' ## Variation by day of week
+#' 
+#' 
+
+# set colours for days of week 
+x <- seq(0, 1, length.out = 7)
+cols <- seq_gradient_pal(low = "blue", 
+                         high = "red")(x)
+
+# hour of day, split by day of week 
+p <- 
   df2.ed_visits_cleaned %>% 
-  filter(year == "2017") %>% 
-  pull(ed_visits) %>% 
-  fitdistrplus::fitdist("norm")
-  
-# str(fit2017)
-summary(fit2017)
-plot(fit2017)
+  group_by(hour, 
+           weekday) %>% 
+  summarize(mean_visits = mean(ed_visits, na.rm = T)) %>% 
+  ggplot(aes(x = hour, 
+             y = mean_visits, 
+             group = weekday, 
+             col = weekday)) + 
+  geom_line() + 
+  scale_color_manual(values = cols) +
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"), 
+        axis.text.x = element_text(angle = 45, 
+                                   hjust = 1)); p
 
-#'
-#' ### Fitting normal dist to 2018 data
-#'
+# ggplotly(p)
 
-fit2018 <- 
-  df2.ed_visits_cleaned %>% 
-  filter(year == "2018") %>% 
-  pull(ed_visits) %>% 
-  fitdistrplus::fitdist("norm")
-
-# str(fit2018)
-summary(fit2018)
-plot(fit2018)
-
-
-# variation by month (4 data points per cell): 
 df2.ed_visits_cleaned %>% 
-  filter(weekday == "Monday", 
-         year %in% c("2018")) %>% 
-  ggplot(aes(x = weekday, 
+  filter(year %in% c("2018")) %>% 
+  ggplot(aes(x = hour, 
              y = ed_visits)) + 
-  geom_beeswarm() + 
-  facet_wrap(~month) + 
+  geom_boxplot() + 
+  facet_wrap(~weekday) + 
   labs(title = "2018") + 
   theme_light() +
   theme(panel.grid.minor = element_line(colour = "grey95"), 
@@ -264,71 +226,27 @@ df2.ed_visits_cleaned %>%
                                    hjust = 1))
   
 
-# simple average by day of week
+# simple average by hour of day 
 df2.ed_visits_cleaned %>% 
-  filter(year == "2018") %>% 
-  group_by(weekday) %>% 
-  summarise(mean_visits = mean(ed_visits)) %>% 
+  group_by(hour) %>% 
+  summarise(mean_visits = mean(ed_visits, 
+                               na.rm = TRUE)) %>% 
   
-  ggplot(aes(x = weekday, 
-             y = mean_visits ,
-             group = weekday)) + 
+  ggplot(aes(x = hour, 
+             y = mean_visits)) + 
   geom_point(size = 5, 
              col = "dodgerblue4") + 
   labs(title = "2018") + 
   theme_light() +
   theme(panel.grid.minor = element_line(colour = "grey95"), 
-      panel.grid.major = element_line(colour = "grey95"))
+        panel.grid.major = element_line(colour = "grey95"), 
+        axis.text.x = element_text(angle = 45, 
+                                   hjust = 1)
+        )
       
 
-# simple average by month
-df2.ed_visits_cleaned %>% 
-  filter(year == "2018") %>% 
-  group_by(month) %>% 
-  summarise(mean_visits = mean(ed_visits)) %>% 
-  
-  ggplot(aes(x = month, 
-             y = mean_visits ,
-             group = month)) + 
-  geom_point(size = 5, 
-             col = "dodgerblue4") + 
-  labs(title = "2018") + 
-  theme_light() +
-  theme(panel.grid.minor = element_line(colour = "grey95"), 
-        panel.grid.major = element_line(colour = "grey95"))
 
 
-
-# "Seasonality" plot 
-
-# set 
-x <- seq(0, 1, length.out = 7)
-cols <- seq_gradient_pal(low = "blue", 
-                         high = "red")(x)
-
-# show_col(cols)
-
-p <- df2.ed_visits_cleaned %>% 
-  filter(year == "2018") %>% 
-  group_by(month, 
-           weekday) %>% 
-  summarise(mean_visits = mean(ed_visits)) %>% 
-  ggplot(aes(x = month, 
-             y = mean_visits, 
-             group = weekday)) +
-  geom_line(aes(col = weekday)) + 
-  labs(title = "2018") + 
-  scale_y_continuous(limits = c(0, 250), 
-                     expand = c(0, 0)) + 
-  
-  scale_color_manual(values = cols) + 
-  
-  theme_light() +
-  labs(title = "2018") + 
-  theme(panel.grid.minor = element_line(colour = "grey95"), 
-      panel.grid.major = element_line(colour = "grey95")); p 
-      
-# ggplotly(p)
 
 
 # avg ED visits by weekday AND month
@@ -336,14 +254,15 @@ p <- df2.ed_visits_cleaned %>%
 
 df2.ed_visits_cleaned %>% 
   filter(year == "2018") %>% 
-  group_by(month, 
+  group_by(hour, 
            weekday) %>% 
-  summarise(mean_visits = mean(ed_visits)) %>% 
+  summarise(mean_visits = mean(ed_visits, 
+                               na.rm = TRUE)) %>% 
   
-  ggplot(aes(x = weekday, 
+  ggplot(aes(x = hour, 
              y = mean_visits)) + 
   geom_col(fill = "dodgerblue4") + 
-  facet_wrap(~month) + 
+  facet_wrap(~weekday) + 
   
   labs(title = "Is there really any point in looking at graphs like this?") + 
   
@@ -364,277 +283,3 @@ df2.ed_visits_cleaned %>%
 
 #+ models
 
-#' ### With interaction between month and weekday 
-#' 
-set.seed(121)
-v1_train_index <- createDataPartition(df2.ed_visits_cleaned$ed_visits, 
-                                      p = 0.8, 
-                                      list = FALSE)
-
-m1 <- lm(ed_visits ~ years_from_2017 + weekday + month + lag_ed_visits + weekday:month, 
-         data = df2.ed_visits_cleaned[v1_train_index, ])
-
-summary(m1)
-
-
-par(mfrow = c(2,2))
-plot(m1)
-par(mfrow = c(1,1))
-
-
-# glance(m1) 
-# tidy(m1)
-# augment(m1) # %>% names
-# predict(m1, interval = "prediction")
-
-m1.train_rmse <- sqrt(mean(resid(m1)^2))
-
-
-
-# test set performance: 
-df4.predictions <- 
-  data.frame(ed_visits = df2.ed_visits_cleaned[-v1_train_index, 6], 
-             predicted = predict(m1, 
-                                 newdata = df2.ed_visits_cleaned[-v1_train_index, ])) 
-
-m1.test_rmse <- sqrt(mean((df4.predictions$predicted - df4.predictions$ed_visits)^2, 
-                          na.rm = TRUE))
-
-
-
-# 5) regression model 2: ----
-
-#' ### Without interaction between month and weekday 
-#' 
-set.seed(121)
-v1_train_index <- createDataPartition(df2.ed_visits_cleaned$ed_visits, 
-                                      p = 0.8, 
-                                      list = FALSE)
-
-m2 <- lm(ed_visits ~ years_from_2017 + weekday + month + lag_ed_visits, 
-         data = df2.ed_visits_cleaned[v1_train_index, ])
-
-summary(m2)
-
-
-par(mfrow = c(2,2))
-plot(m2)
-par(mfrow = c(1,1))
-
-
-# glance(m2) 
-# tidy(m2)
-# augment(m2) # %>% names
-# predict(m2, interval = "prediction")
-
-m2.train_rmse <- sqrt(mean(resid(m2)^2))
-
-
-
-# test set performance: 
-df4.predictions <- 
-  data.frame(ed_visits = df2.ed_visits_cleaned[-v1_train_index, 6], 
-             predicted = predict(m2, 
-                                 newdata = df2.ed_visits_cleaned[-v1_train_index, ])) 
-
-m2.test_rmse <- sqrt(mean((df4.predictions$predicted - df4.predictions$ed_visits)^2, 
-                          na.rm = TRUE))
-
-
-#' ## Summary of models
-
-df5.model.performance <- 
-  data.frame(model = c("year + month + weekday + month:weekday", 
-                       "year + month + weekday + month:weekday", 
-                       "year + month + weekday", 
-                       "year + month + weekday"), 
-             metric = rep(c("Train RMSE", 
-                            "Test RMSE"), 2), 
-             value = c(m1.train_rmse, 
-                       m1.test_rmse, 
-                       m2.train_rmse, 
-                       m2.test_rmse)) 
-
-
-df5.model.performance %>% 
-  kable() %>% 
-  kable_styling(bootstrap_options = c("striped",
-              "condensed", 
-              "responsive"))
-
-#' \  
-#' \  
-#' \                
-
-#'  
-#' ## Model selection notes
-
-#' Including month, weekday *and* year is very likely to overfit - there's just
-#' 4 data points per cell!!
-#'
-#' The general strategy to prevent overfitting is, of course, cross-validation
-#' or a train/test split
-
-
-#' \  
-#' \  
-#' \  
-
-
-# 6) train model 2 on full dataset: -----------
-
-#' ## Train selected model on full dataset
-
-m3.full_dataset <- lm(ed_visits ~ years_from_2017 + weekday + month + lag_ed_visits, 
-                      data = df2.ed_visits_cleaned)
-
-summary(m3.full_dataset)
-
-glance(m3.full_dataset) %>% 
-  kable() %>% 
-  kable_styling(bootstrap_options = c("striped",
-              "condensed", 
-              "responsive"))
-
-df6.coeffs <- 
-  tidy(m3.full_dataset) %>% 
-  mutate(lower_ci = estimate - 1.96 * std.error, 
-         upper_ci = estimate + 1.96 * std.error) %>% 
-  
-  dplyr::select(term, 
-         lower_ci, 
-         estimate, 
-         upper_ci, 
-         everything()) 
-
-df6.coeffs %>% 
-  datatable() %>% 
-  formatRound(2:7, 2)
-
-
-#' \  
-#' \  
-#' \  
-
-
-#' 
-#' ## Visuals of day of week effects 
-#' 
-
-#+ day-of-week-plot
-# 7) visuals of day of week effects ----------
-
-df6.coeffs %>% 
-  filter(grepl("weekday", term)) %>% 
-  
-  mutate(term = substring(term, 8)) %>% 
-  mutate(term = factor(term, 
-                       levels = c("Monday", 
-                                  "Tuesday", 
-                                  "Wednesday", 
-                                  "Thursday", 
-                                  "Friday",
-                                  "Saturday", 
-                                  "Sunday"))) %>% 
-  
-  ggplot()  +
-  geom_pointrange(aes(x = term, 
-                      ymin = lower_ci, 
-                      ymax = upper_ci, 
-                      y = estimate)) + 
-  geom_hline(yintercept = 0) + 
-  
-  scale_y_continuous(limits = c(-20, 20), 
-                     breaks = seq(-20, 20, 4)) + 
-  
-  labs(x = "Day of week", 
-       y = "Difference in average daily ED visits" ,
-       title = "LGH ED \nImpact of Day of Week on average daily ED visits", 
-       subtitle = "These estimates control for year and month, allowing us to isolate weekday effects \nfrom other factors and from statistical noise \n\nBaseline - Monday", 
-       caption = "\n\nNote: There is no significant interaction between day-of-week effects and month effects") + 
-  
-  theme_light(base_size = 12) +
-  theme(panel.grid.minor = element_line(colour = "grey95"), 
-      panel.grid.major = element_line(colour = "grey95"))
-      
-
-#' \  
-#' \  
-#' \  
-
-
-#'
-#' ## Visuals of month effects
-#'
-
-#+ month-plot
-# 8) visuals of month effects ----------
-
-df6.coeffs %>% 
-  filter(grepl("month", term)) %>% 
-  
-  mutate(term = factor(term,
-                       levels = c(
-                         "month2", 
-                         "month3", 
-                         "month4", 
-                         "month5", 
-                         "month6", 
-                         "month7", 
-                         "month8", 
-                         "month9", 
-                         "month10", 
-                         "month11", 
-                         "month12"
-                       ))) %>% 
-
-  
-  ggplot()  +
-  geom_pointrange(aes(x = term, 
-                      ymin = lower_ci, 
-                      ymax = upper_ci, 
-                      y = estimate)) + 
-  geom_hline(yintercept = 0) + 
-  
-  scale_y_continuous(limits = c(-20, 20), 
-                     breaks = seq(-20, 20, 4)) + 
-  
-  
-  labs(x = "Month", 
-       y = "Difference in average daily ED visits" ,
-       title = "LGH ED \nImpact of Month on average daily ED visits", 
-       subtitle = "These estimates control for year and day-of-week, allowing us to isolate month effects \nfrom other factors and from statistical noise \n\nBaseline - January", 
-       caption = "\n\nNote: There is no significant interaction between day-of-week effects and month effects") + 
-  
-  theme_light(base_size = 12) +
-  theme(panel.grid.minor = element_line(colour = "grey95"), 
-        panel.grid.major = element_line(colour = "grey95"), 
-        axis.text.x = element_text(angle = 45, 
-                                   hjust = 1)) 
-
-
-    
-
-
-
-
-
-
-# 9) write outputs: ---------
-# write_csv(df6.coeffs,
-#           here::here("results", 
-#                      "dst", 
-#                      "2019-06-21_lgh_ed-visits-regression-coeffs.csv"))
-              
-
-# write_csv(df6.coeffs,
-#           here::here("results", 
-#                      "dst", 
-#                      "2019-06-24_lgh_ed-visits-regression-coeffs.csv"))
-             
-
-# write_csv(df2.ed_visits_cleaned,
-#           here::here("results", 
-#                      "dst", 
-#                      "2019-06-26_lgh_ed-visits-by-hour-of-day.csv"))
-             

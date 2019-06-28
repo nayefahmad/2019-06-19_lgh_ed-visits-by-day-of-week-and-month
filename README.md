@@ -1,5 +1,4 @@
-# 2019-06-19_lgh_ed-visits-by-day-of-week-and-month
-
+# LGH daily and hourly ED visits models 
 The goal here is not to produce a highly accurate *predictive* algorithm, but rather to: 
 
 * Find how much of the variance in daily ED visits can be explained with weekday, year, month, and lagged values as predictors. If, for example, only 30% of variance is explained, then it is misleading to display only the averages by day of week in a graph. This would give the impression of precision where it is not justified. 

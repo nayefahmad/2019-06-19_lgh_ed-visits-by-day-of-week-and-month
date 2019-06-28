@@ -78,6 +78,8 @@ df2.ed_visits_cleaned <-
          lag5_ed_visits = lag(ed_visits, 5),
          lag6_ed_visits = lag(ed_visits, 6)) %>% 
   
+  replace(is.na(.), 0) %>% 
+  
   select(date, 
          hour, 
          years_from_2017, 
@@ -193,7 +195,7 @@ df2.ed_visits_cleaned %>%
 #' **Hypothesis**: this is a mixture of two normal distributions: one for
 #' "late-night" rates, one for rest of the day.
 #'
-#' Let's start by analyzing visits over the period 8 AM to midnight. This seems
+#' Let's start by analyzing visits over the period 7 AM to midnight. This seems
 #' to give a reasonable distribution.
 #'
 #'
@@ -227,8 +229,10 @@ df2.ed_visits_cleaned %>%
 # x %>% density() %>% plot(main = paste("Poisson with mean", round(mean_visits_from_5am, 2)))
 
 
+#'
+#' ### Plots for each hour of day in 2018 
+#' 
 
-# plots for each hour of day in 2018 
 df4.nest_by_hour <- 
   df2.ed_visits_cleaned %>% 
   filter(year == "2018") %>% 
@@ -244,11 +248,21 @@ df4.nest_by_hour <-
                            labs(title = y %>% as.character())
                        }))
 
-par(mfrow = c(3,3))
-df4.nest_by_hour$density[8:24]
-par(mfrow = c(1,1))
+df4.nest_by_hour$density
  
- 
+
+#' ## Data - subset for 7 AM to midnight 
+#' 
+
+df5.ed_visits_busy_hours <- 
+  df2.ed_visits_cleaned %>% 
+  filter(hour_int >= 8)
+
+df5.ed_visits_busy_hours %>% 
+  head(50) %>% 
+  datatable()
+
+
 #' ## Variation by day of week
 #' 
 #' 
@@ -315,7 +329,7 @@ df2.ed_visits_cleaned %>%
 
 
 
-# avg ED visits by weekday AND month
+# avg ED visits by weekday AND hour
 # this is the type of plot that I am arguing against - it's all noise
 
 df2.ed_visits_cleaned %>% 
@@ -346,6 +360,33 @@ df2.ed_visits_cleaned %>%
 # 4) regression model 1: ----
 
 #' ## Regression models 
+#' 
+#' ### With interaction between hour and weekday
 
 #+ models
+
+set.seed(27)
+v1_train_index <- createDataPartition(df5.ed_visits_busy_hours$ed_visits, 
+                                      p = 0.8, 
+                                      list = FALSE)
+
+m1 <- lm(ed_visits ~ hour + weekday + years_from_2017 + 
+           lag_ed_visits + lag2_ed_visits + hour:weekday, 
+         data = df5.ed_visits_busy_hours)
+
+summary(m1)
+
+resid(m1) %>% hist
+
+par(mfrow = c(2,2))
+plot(m1)
+par(mfrow = c(1,1))
+
+
+# glance(m1) 
+# tidy(m1)
+# augment(m1) # %>% names
+# predict(m1, interval = "prediction")
+
+m1.train_rmse <- sqrt(mean(resid(m1)^2))
 

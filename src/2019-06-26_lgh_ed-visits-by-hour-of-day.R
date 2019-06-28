@@ -372,7 +372,7 @@ v1_train_index <- createDataPartition(df5.ed_visits_busy_hours$ed_visits,
 
 m1 <- lm(ed_visits ~ hour + weekday + years_from_2017 + 
            lag_ed_visits + lag2_ed_visits + hour:weekday, 
-         data = df5.ed_visits_busy_hours)
+         data = df5.ed_visits_busy_hours[v1_train_index, ])
 
 summary(m1)
 
@@ -383,9 +383,26 @@ plot(m1)
 par(mfrow = c(1,1))
 
 
-# glance(m1) 
+glance(m1) 
+
 # tidy(m1)
-# augment(m1) # %>% names
+
+augment(m1) %>% 
+  ggplot(aes(x = .fitted, 
+             y = ed_visits)) + 
+  geom_point() + 
+  scale_x_continuous(limits = c(0, 25)) + 
+  scale_y_continuous(limits = c(0, 25)) + 
+  
+  geom_smooth() + 
+  geom_abline(slope = 1, 
+              intercept = 0) + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+      panel.grid.major = element_line(colour = "grey95"))
+      
+
 # predict(m1, interval = "prediction")
 
 m1.train_rmse <- sqrt(mean(resid(m1)^2))

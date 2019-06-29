@@ -365,11 +365,12 @@ df2.ed_visits_cleaned %>%
 
 #+ models
 
-set.seed(27)
+set.seed(11)
 v1_train_index <- createDataPartition(df5.ed_visits_busy_hours$ed_visits, 
                                       p = 0.8, 
                                       list = FALSE)
 
+# fit model: 
 m1 <- lm(ed_visits ~ hour + weekday + years_from_2017 + 
            lag_ed_visits + lag2_ed_visits + hour:weekday, 
          data = df5.ed_visits_busy_hours[v1_train_index, ])
@@ -383,7 +384,12 @@ plot(m1)
 par(mfrow = c(1,1))
 
 
-glance(m1) 
+glance(m1) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+              "condensed", 
+              "responsive"))
+              
 
 # tidy(m1)
 
@@ -406,4 +412,117 @@ augment(m1) %>%
 # predict(m1, interval = "prediction")
 
 m1.train_rmse <- sqrt(mean(resid(m1)^2))
+
+
+# test set performance: 
+df6.predictions_m1 <- 
+  data.frame(ed_visits = df5.ed_visits_busy_hours[-v1_train_index, 7], 
+             predicted = predict(m1, 
+                                 newdata = df5.ed_visits_busy_hours[-v1_train_index, ])) 
+
+m1.test_rmse <- sqrt(mean((df6.predictions_m1$predicted - df6.predictions_m1$ed_visits)^2, 
+                          na.rm = TRUE))
+
+
+
+
+
+
+
+
+
+#' ## Without interaction between hour and weekday
+#' 
+
+set.seed(11)
+v1_train_index <- createDataPartition(df5.ed_visits_busy_hours$ed_visits, 
+                                      p = 0.8, 
+                                      list = FALSE)
+
+# fit model: 
+m2 <- lm(ed_visits ~ hour + weekday + years_from_2017 + 
+           lag_ed_visits + lag2_ed_visits,  
+         data = df5.ed_visits_busy_hours[v1_train_index, ])
+
+summary(m2)
+
+resid(m2) %>% hist
+
+par(mfrow = c(2,2))
+plot(m2)
+par(mfrow = c(1,1))
+
+
+glance(m2) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+                                      "condensed", 
+                                      "responsive"))
+
+
+# tidy(m2)
+
+# actual vs predicted values: 
+augment(m2) %>% 
+  ggplot(aes(x = .fitted, 
+             y = ed_visits)) + 
+  geom_point() + 
+  scale_x_continuous(limits = c(0, 25)) + 
+  scale_y_continuous(limits = c(0, 25)) + 
+  
+  geom_smooth() + 
+  geom_abline(slope = 1, 
+              intercept = 0) + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"))
+
+
+# predict(m2, interval = "prediction")
+
+m2.train_rmse <- sqrt(mean(resid(m2)^2))
+
+
+# test set performance: 
+df7.predictions_m2 <- 
+  data.frame(ed_visits = df5.ed_visits_busy_hours[-v1_train_index, 7], 
+             predicted = predict(m2, 
+                                 newdata = df5.ed_visits_busy_hours[-v1_train_index, ])) 
+
+m2.test_rmse <- sqrt(mean((df7.predictions_m2$predicted - df7.predictions_m2$ed_visits)^2, 
+                          na.rm = TRUE))
+
+
+#' ## Summary of models 
+#' 
+
+df8.model.performance <- 
+  data.frame(model = c("year + weekday + hour + hour:weekday + lag + lag2", 
+                       "year + weekday + hour + hour:weekday + lag + lag2", 
+                       "year + weekday + hour + lag + lag2", 
+                       "year + weekday + hour + lag + lag2"), 
+             metric = rep(c("Train RMSE", 
+                            "Test RMSE"), 2), 
+             value = c(m1.train_rmse, 
+                       m1.test_rmse, 
+                       m2.train_rmse, 
+                       m2.test_rmse)) 
+
+
+df8.model.performance %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+                                      "condensed", 
+                                      "responsive"))
+
+
+
+#' 
+#' ## Model selection notes 
+#' 
+#' 
+
+
+
 

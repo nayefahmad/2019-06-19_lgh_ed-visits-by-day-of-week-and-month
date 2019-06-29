@@ -558,8 +558,12 @@ augment(m3) %>%
 #'
 #' * Between m1 and m2, m2 is simpler with similar adj-Rsqrd, and similar test
 #' RMSE
+#'
+#' * However, m1 includes several significant interactions, and studying
+#' interactions is one of the key goals in this analysis. To look at it another
+#' way, m1 is more complex, but is probably not overfitting much.
 #' 
-#' * Let's go with m2 
+#' * Let's go with m1 here. 
 
 #' \  
 #'
@@ -586,9 +590,48 @@ df8.model.performance %>%
 
 
 
+#' ## Train selected model on full dataset 
+#' 
+
+m4.full_dataset <- lm(ed_visits ~ hour + weekday + years_from_2017 + 
+                        lag_ed_visits + lag2_ed_visits + hour:weekday, 
+                      data = df5.ed_visits_busy_hours)
+
+
+glance(m4.full_dataset) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+                                      "condensed", 
+                                      "responsive"))
+
+
+df9.coeffs <- 
+  tidy(m4.full_dataset) %>% 
+  mutate(lower_ci = estimate - 1.96 * std.error, 
+         upper_ci = estimate + 1.96 * std.error, 
+         is_signif_0.10 = ifelse(p.value < 0.10, 
+                                 1, 0)) %>% 
+  
+  dplyr::select(term, 
+                lower_ci, 
+                estimate, 
+                upper_ci, 
+                everything()) 
+
+df9.coeffs %>% 
+  datatable() %>% 
+  formatRound(2:7, 2)
 
 
 
 
 
 
+
+
+# 6) write outputs: 
+# write_csv(df9.coeffs,
+#           here::here("results", 
+#                      "dst", 
+#                     "2019-06-28_lgh_ed-visits-by-hour_regression-coeffs.csv"))
+             

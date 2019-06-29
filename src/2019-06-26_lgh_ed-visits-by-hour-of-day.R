@@ -361,7 +361,7 @@ df2.ed_visits_cleaned %>%
 
 #' ## Regression models 
 #' 
-#' ### With interaction between hour and weekday
+#' ### m1: With interaction between hour and weekday
 
 #+ models
 
@@ -377,6 +377,7 @@ m1 <- lm(ed_visits ~ hour + weekday + years_from_2017 +
 
 summary(m1)
 
+# diagnostics
 resid(m1) %>% hist
 
 par(mfrow = c(2,2))
@@ -431,7 +432,7 @@ m1.test_rmse <- sqrt(mean((df6.predictions_m1$predicted - df6.predictions_m1$ed_
 
 
 
-#' ## Without interaction between hour and weekday
+#' ### m2: Without interaction between hour and weekday
 #' 
 
 set.seed(11)
@@ -446,6 +447,8 @@ m2 <- lm(ed_visits ~ hour + weekday + years_from_2017 +
 
 summary(m2)
 
+
+# diagnostics
 resid(m2) %>% hist
 
 par(mfrow = c(2,2))
@@ -494,8 +497,72 @@ m2.test_rmse <- sqrt(mean((df7.predictions_m2$predicted - df7.predictions_m2$ed_
                           na.rm = TRUE))
 
 
-#' ## Summary of models 
+
+
+
+
+#' ### m3: Without interaction between hour and weekday: POISSON model 
 #' 
+
+set.seed(11)
+v1_train_index <- createDataPartition(df5.ed_visits_busy_hours$ed_visits, 
+                                      p = 0.8, 
+                                      list = FALSE)
+
+m3 <- glm(ed_visits ~ hour + weekday + years_from_2017 + 
+           lag_ed_visits + lag2_ed_visits, 
+         data = df5.ed_visits_busy_hours[v1_train_index, ], 
+         family = "poisson")
+
+summary(m3)
+
+
+
+# diagnostics
+resid(m3) %>% hist
+
+par(mfrow = c(2,2))
+plot(m3)
+par(mfrow = c(1,1))
+
+
+
+glance(m3) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped",
+                                      "condensed", 
+                                      "responsive"))
+
+# Actual vs predicted vals 
+augment(m3) %>% 
+  ggplot(aes(x = .fitted, 
+             y = ed_visits)) + 
+  geom_point() + 
+  scale_x_continuous(limits = c(0, 5)) + 
+  scale_y_continuous(limits = c(0, 25)) + 
+  
+  geom_smooth() + 
+  geom_abline(slope = 1, 
+              intercept = 0) + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"))
+
+
+# 5) summary of models --------------------------------------
+
+#' ## Summary of models
+#'
+#' * Poisson model is clearly wildly inappropriate
+#'
+#' * Between m1 and m2, m2 is simpler with similar adj-Rsqrd, and similar test
+#' RMSE
+#' 
+#' * Let's go with m2 
+
+#' \  
+#'
 
 df8.model.performance <- 
   data.frame(model = c("year + weekday + hour + hour:weekday + lag + lag2", 
@@ -518,10 +585,9 @@ df8.model.performance %>%
 
 
 
-#' 
-#' ## Model selection notes 
-#' 
-#' 
+
+
+
 
 
 

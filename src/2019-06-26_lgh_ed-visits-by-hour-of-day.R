@@ -622,14 +622,87 @@ df9.coeffs %>%
   datatable() %>% 
   formatRound(2:7, 2)
 
+#'
+#' \  
+#' 
+
+
+# 6) pre-processing before visualization: -----------
+
+#'
+#'## Pre-processing before visualization
+#'
+
+df10.sig_interactions <- 
+  df9.coeffs %>% 
+  filter(grepl(":", term), 
+         is_signif_0.10 == 1) %>% 
+  mutate(hour = substr(term, 1, 15)) %>% 
+  select(term, 
+         hour, 
+         estimate)
+
+
+df11.hour_effects <- 
+  df9.coeffs %>% 
+  filter(!grepl(":", term), 
+         grepl("hour", term)) %>% 
+  
+  left_join(df10.sig_interactions, 
+            by = c("term" = "hour")) %>% 
+  
+  mutate(is_interaction = ifelse(is.na(estimate.y), 
+                                       "No", "Yes") %>% 
+           as.factor) %>% 
+  
+  select(term, 
+         lower_ci, 
+         estimate.x, 
+         upper_ci, 
+         is_interaction)
 
 
 
+#' ## Visual of hour effects 
+#' 
+
+# 7) visuals of hour and day of week effects ----------
+
+df11.hour_effects %>% 
+  
+  mutate(term = substring(term, 5) %>% as.factor()) %>% 
+  
+  ggplot()  +
+  geom_pointrange(aes(x = term, 
+                      ymin = lower_ci, 
+                      ymax = upper_ci, 
+                      y = estimate.x, 
+                      col = is_interaction)) + 
+  geom_hline(yintercept = 0) + 
+  
+  scale_y_continuous(limits = c(-5, 10), 
+                     breaks = seq(-5, 10, 3)) + 
+  
+  scale_color_manual(values = c("black", 
+                               "red")) + 
+  
+  labs(x = "Hour of day", 
+       y = "Difference in average hourly ED visits" ,
+       title = "LGH ED \nImpact of Hour of Day on average daily ED visits", 
+       subtitle = "These estimates control for year and day-of-week, allowing us to isolate hourly effects \nfrom other factors and from statistical noise \n\nBaseline - 0700 to 0759 on Monday", 
+       caption = "\n\nNote: our model accounts for 30% of the variation\nin hourly ED visits between 7 AM and midnight", 
+       col = "Varies by weekday?") + 
+  
+  theme_light(base_size = 12) +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"), 
+        axis.text.x = element_text(angle = 45, 
+                                   hjust = 1)
+        )
 
 
 
-
-# 6) write outputs: 
+# 8) write outputs: -----------------------------
 # write_csv(df9.coeffs,
 #           here::here("results", 
 #                      "dst", 

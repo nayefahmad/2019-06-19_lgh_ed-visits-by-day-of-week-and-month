@@ -277,6 +277,8 @@ p <-
   df2.ed_visits_cleaned %>% 
   group_by(hour, 
            weekday) %>% 
+  filter(hour_int >= 8, 
+         hour_int <= 24) %>% 
   summarize(mean_visits = mean(ed_visits, na.rm = T)) %>% 
   ggplot(aes(x = hour, 
              y = mean_visits, 
@@ -689,7 +691,7 @@ df11.hour_effects %>%
   labs(x = "Hour of day", 
        y = "Difference in average hourly ED visits" ,
        title = "LGH ED \nImpact of Hour of Day on average daily ED visits", 
-       subtitle = "These estimates control for year and day-of-week, allowing us to isolate hourly effects \nfrom other factors and from statistical noise \n\nBaseline - 0700 to 0759 on Monday", 
+       subtitle = "These estimates control for year and day-of-week, allowing us to \nisolate hourly effects from other factors and from statistical noise \n\nBaseline - 0700 to 0759 on Monday", 
        caption = "\n\nNote: our model accounts for 30% of the variation\nin hourly ED visits between 7 AM and midnight", 
        col = "Varies by weekday?") + 
   

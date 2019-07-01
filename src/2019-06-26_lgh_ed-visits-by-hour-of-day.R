@@ -707,11 +707,13 @@ df11.hour_effects %>%
 #' \  
 #' \  
 
+#' 
 #' ## Prediction intervals for illustrative data
 #'
 #' Import illustrative data to predict on. Note that all lagged ed_visits values
 #' are set to the overall mean for the corresponding hour of day (see
 #' `df3.mean_and_sd`)
+
 
 df12.predict_intervals <- 
   read_csv(here::here("data", 
@@ -727,9 +729,24 @@ df12.predict_intervals <-
          # years_from_2017 = as.factor(years_from_2017), 
          year = as.factor(year), 
          month = as.factor(month), 
-         hour = as.factor(hour)) 
+         hour = as.factor(hour)) %>% 
   
-# predictions using model m1: 
+  # only MOnday: 
+  filter(weekday == "Monday") %>% 
+  
+  # identify hours with significant weekday effects: 
+  left_join(df10.sig_interactions %>% 
+              mutate(hour = substr(hour, 5, 15)) %>% 
+              select(hour) %>% 
+              unique() %>% 
+              mutate(is_interaction = 1)) %>% 
+  
+  replace(is.na(.), 0) %>% 
+  mutate(is_interaction = as.factor(is_interaction))
+
+
+
+# add predictions from model m1: 
 df12.predict_intervals <- 
   df12.predict_intervals %>% 
   bind_cols(predict(m1, 
@@ -737,10 +754,15 @@ df12.predict_intervals <-
                     interval = "predict") %>% 
               as.data.frame()) %>% 
   
+  
+  
+# group and nest: 
   group_by(weekday) %>% 
-  nest() %>% 
+  nest() 
 
 # graphs of time of day ed_visits, by weekday: 
+df12.predict_intervals <- 
+  df12.predict_intervals %>% 
   mutate(hourly_visits = map2(data, 
                               weekday, 
                               function(data, weekday){
@@ -748,13 +770,19 @@ df12.predict_intervals <-
                                  geom_pointrange(aes(x = hour, 
                                                      y = fit, 
                                                      ymin = lwr, 
-                                                     ymax = upr)) + 
-                                  labs(title = weekday, 
-                                       x = "Hourly ED visits", 
-                                       y = "Hour") + 
+                                                     ymax = upr, 
+                                                     col = is_interaction)) + 
+                                  labs(title = paste0(as.character(weekday), "s", " - 2019"), 
+                                       subtitle = "Predicted ED visits by hour of day, after accounting for \nyear, weekday effects, and intrinsic variability", 
+                                       x = "Hour", 
+                                       y = "ED visits", 
+                                       col = "Varies by weekday?") + 
                                   
-                                  scale_y_continuous(limits = c(0, 20), 
-                                                     breaks = seq(0, 20, 2)) + 
+                                  scale_y_continuous(limits = c(-2, 20), 
+                                                     breaks = seq(-2, 20, 2)) + 
+                                  
+                                  scale_color_manual(values = c("black", 
+                                                                "red")) + 
                                   
                                   theme_light() +
                                   theme(panel.grid.minor = element_line(colour = "grey95"), 
@@ -762,8 +790,6 @@ df12.predict_intervals <-
                                       axis.text.x = element_text(angle = 45, 
                                                                  hjust = 1))
                                       
-                                  
-                                  
                                   
                                  
                              }

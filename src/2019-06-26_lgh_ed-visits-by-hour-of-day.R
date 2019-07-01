@@ -703,6 +703,81 @@ df11.hour_effects %>%
         )
 
 
+#' \  
+#' \  
+#' \  
+
+#' ## Prediction intervals for illustrative data
+#'
+#' Import illustrative data to predict on. Note that all lagged ed_visits values
+#' are set to the overall mean for the corresponding hour of day (see
+#' `df3.mean_and_sd`)
+
+df12.predict_intervals <- 
+  read_csv(here::here("data", 
+                      "2019-06-30_illustrative-data-for-prediction-intervals.csv")) %>% 
+  mutate(weekday = fct_relevel(weekday, 
+                               levels = c("Monday", 
+                                          "Tuesday", 
+                                          "Wednesday", 
+                                          "Thursday", 
+                                          "Friday",
+                                          "Saturday", 
+                                          "Sunday")), 
+         # years_from_2017 = as.factor(years_from_2017), 
+         year = as.factor(year), 
+         month = as.factor(month), 
+         hour = as.factor(hour)) 
+  
+# predictions using model m1: 
+df12.predict_intervals <- 
+  df12.predict_intervals %>% 
+  bind_cols(predict(m1, 
+                    newdata = df12.predict_intervals,
+                    interval = "predict") %>% 
+              as.data.frame()) %>% 
+  
+  group_by(weekday) %>% 
+  nest() %>% 
+
+# graphs of time of day ed_visits, by weekday: 
+  mutate(hourly_visits = map2(data, 
+                              weekday, 
+                              function(data, weekday){
+                               ggplot(data) + 
+                                 geom_pointrange(aes(x = hour, 
+                                                     y = fit, 
+                                                     ymin = lwr, 
+                                                     ymax = upr)) + 
+                                  labs(title = weekday, 
+                                       x = "Hourly ED visits", 
+                                       y = "Hour") + 
+                                  
+                                  scale_y_continuous(limits = c(0, 20), 
+                                                     breaks = seq(0, 20, 2)) + 
+                                  
+                                  theme_light() +
+                                  theme(panel.grid.minor = element_line(colour = "grey95"), 
+                                      panel.grid.major = element_line(colour = "grey95"), 
+                                      axis.text.x = element_text(angle = 45, 
+                                                                 hjust = 1))
+                                      
+                                  
+                                  
+                                  
+                                 
+                             }
+                             ))
+  
+  
+df12.predict_intervals$hourly_visits    
+
+
+
+
+
+
+
 
 # 8) write outputs: -----------------------------
 # write_csv(df9.coeffs,

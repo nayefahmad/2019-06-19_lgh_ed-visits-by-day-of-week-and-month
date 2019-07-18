@@ -690,7 +690,7 @@ df11.hour_effects %>%
   
   labs(x = "Hour of day", 
        y = "Difference in average hourly ED visits" ,
-       title = "LGH ED \nImpact of Hour of Day on average daily ED visits", 
+       title = "LGH ED \nImpact of Hour of Day on average hourly ED visits", 
        subtitle = "These estimates control for year and day-of-week, allowing us to \nisolate hourly effects from other factors and from statistical noise \n\nBaseline - 0700 to 0759 on Monday", 
        caption = "\n\nNote: our model accounts for 30% of the variation\nin hourly ED visits between 7 AM and midnight", 
        col = "Varies by weekday?") + 
@@ -806,6 +806,12 @@ df12.predict_intervals$hourly_visits
 
 
 # 8) write outputs: -----------------------------
+# write_csv(df5.ed_visits_busy_hours,
+#           here::here("results",
+#                      "dst",
+#                      "2019-07-02_lgh_ed-visits-by-hour_data.csv"))
+
+
 # write_csv(df9.coeffs,
 #           here::here("results", 
 #                      "dst", 

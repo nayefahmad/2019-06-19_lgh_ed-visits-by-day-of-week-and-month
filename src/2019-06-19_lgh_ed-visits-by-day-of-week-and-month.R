@@ -86,13 +86,17 @@ df2.ed_visits_cleaned %>% datatable()
 # mean and sd: 
 df3.mean_and_sd <- 
   df2.ed_visits_cleaned %>% 
-  group_by(year) %>% 
+  group_by(year, 
+           weekday) %>% 
   summarise(mean_visits = mean(ed_visits), 
             sd_visits = sd(ed_visits))
 
 df3.mean_and_sd %>% 
   datatable() %>% 
-  formatRound(2:3, 2)
+  formatRound(2:4, 2)
+
+
+
 
 #' \  
 #' \  
@@ -600,16 +604,47 @@ df6.coeffs %>%
         panel.grid.major = element_line(colour = "grey95"), 
         axis.text.x = element_text(angle = 45, 
                                    hjust = 1)) 
+#' \  
+#' \  
+#' \
 
-
+  
+#'
+#' ## Prediction intervals for illustrative data
+#'
+#' Import illustrative data to predict on. Note that all lagged ed_visits values
+#' are set to the overall mean for the corresponding hour of day (see
+#' `df3.mean_and_sd`)
     
+# 9) Prediction intervals for illustrative data ---------
+
+df7.predict_intervals <- 
+  read_csv(here::here("data", 
+                      "2019-06-30_ed-daily_illustrative-data-for-prediction-intervals.csv")) %>% 
+  
+  
+  mutate(weekday = fct_relevel(weekday, 
+                               levels = c("Monday", 
+                                          "Tuesday", 
+                                          "Wednesday", 
+                                          "Thursday", 
+                                          "Friday",
+                                          "Saturday", 
+                                          "Sunday")), 
+         date = mdy(date), 
+         # years_from_2017 = as.factor(years_from_2017), 
+         year = as.factor(year), 
+         month = as.factor(month))
+  
+
+# todo: 
+predict(m2, 
+        newdata = df7.predict_intervals)
 
 
 
 
-
-
-# 9) write outputs: ---------
+# 10) write outputs: ---------
 # write_csv(df6.coeffs,
 #           here::here("results", 
 #                      "dst", 

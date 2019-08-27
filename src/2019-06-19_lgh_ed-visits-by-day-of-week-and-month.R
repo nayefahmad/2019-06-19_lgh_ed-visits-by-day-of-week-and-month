@@ -639,7 +639,15 @@ df7.predict_intervals <-
 
 # todo: 
 predict(m2, 
-        newdata = df7.predict_intervals)
+        newdata = df7.predict_intervals, 
+        interval = "prediction") %>% as.data.frame() %>% 
+  bind_cols(df7.predict_intervals) %>% 
+  
+  ggplot(aes(x = weekday,
+             ymin = lwr, 
+             ymax = upr, 
+             y = fit)) + 
+  geom_pointrange()
 
 
 

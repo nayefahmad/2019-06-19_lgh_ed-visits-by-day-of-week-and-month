@@ -54,5 +54,5 @@ extract_ed_visits <- function(startdate_id,
 # test the function: ------
 # library(beepr)
 # 
-edvisits <- extract_ed_visits("20181212",
-                              "20181220"); beep()
+# edvisits <- extract_ed_visits("20181212",
+#                               "20181220"); beep()

@@ -613,8 +613,9 @@ df6.coeffs %>%
 #' ## Prediction intervals for illustrative data
 #'
 #' Import illustrative data to predict on. Note that all lagged ed_visits values
-#' are set to the overall mean for the corresponding hour of day (see
-#' `df3.mean_and_sd`)
+#' are set to the overall mean for the corresponding day of week in 2019 (see 
+#' `df3.mean_and_sd``)
+#' 
     
 # 9) Prediction intervals for illustrative data ---------
 
@@ -637,17 +638,28 @@ df7.predict_intervals <-
          month = as.factor(month))
   
 
-# todo: 
+
+
 predict(m2, 
         newdata = df7.predict_intervals, 
-        interval = "prediction") %>% as.data.frame() %>% 
+        interval = "prediction") %>% 
+  as.data.frame() %>% 
+  
   bind_cols(df7.predict_intervals) %>% 
   
   ggplot(aes(x = weekday,
              ymin = lwr, 
              ymax = upr, 
              y = fit)) + 
-  geom_pointrange()
+  geom_pointrange() + 
+  
+  labs(title = "2019 weekday effects", 
+       subtitle = "Predicted LGH ED visits by day of week") + 
+  
+  theme_light() +
+  theme(panel.grid.minor = element_line(colour = "grey95"), 
+        panel.grid.major = element_line(colour = "grey95"))
+      
 
 
 

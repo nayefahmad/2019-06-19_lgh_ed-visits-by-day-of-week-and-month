@@ -614,7 +614,7 @@ df6.coeffs %>%
 #'
 #' Import illustrative data to predict on. Note that all lagged ed_visits values
 #' are set to the overall mean for the corresponding day of week in 2019 (see 
-#' `df3.mean_and_sd``)
+#' `df3.mean_and_sd`)
 #' 
     
 # 9) Prediction intervals for illustrative data ---------
@@ -639,14 +639,23 @@ df7.predict_intervals <-
   
 
 
-
-predict(m2, 
+df7.predict_intervals <- 
+  predict(m2, 
         newdata = df7.predict_intervals, 
         interval = "prediction") %>% 
   as.data.frame() %>% 
   
-  bind_cols(df7.predict_intervals) %>% 
+  bind_cols(df7.predict_intervals)  
   
+df7.predict_intervals %>% 
+  select(-fit,
+         -lwr, 
+         -upr, 
+         everything()) %>% 
+  datatable() %>% 
+  formatRound(8:10, 2)
+
+df7.predict_intervals %>%   
   ggplot(aes(x = weekday,
              ymin = lwr, 
              ymax = upr, 
@@ -654,14 +663,51 @@ predict(m2,
   geom_pointrange() + 
   
   labs(title = "2019 weekday effects", 
-       subtitle = "Predicted LGH ED visits by day of week") + 
+       subtitle = "Predicted LGH ED visits by day of week \n\nBased on our model, only 5% of actual data points should fall outside these ranges. \nObserved value is about 3% as of 2019-06-17", 
+       y = "number of ED visits") + 
   
   theme_light() +
   theme(panel.grid.minor = element_line(colour = "grey95"), 
         panel.grid.major = element_line(colour = "grey95"))
       
 
+#' ### Validating prediction intervals
+#'
+#' Is it true that in 2019, 5% of data points fall outsite these prediction
+#' intervals?
 
+df8.validate_predict_int <- 
+  df7.predict_intervals %>% 
+  left_join(df2.ed_visits_cleaned %>% 
+              filter(years_from_2017 == 2),
+            by = c("weekday" = "weekday")) %>% 
+  select(date.y, 
+         month.x, 
+         weekday, 
+         ed_visits.y, 
+         lwr, 
+         upr) %>% 
+  
+  mutate(outsite_predict_int = ifelse(ed_visits.y < lwr | ed_visits.y > upr, 
+                                      1, 0)) %>% 
+  arrange(date.y)
+
+
+df8.validate_predict_int %>% 
+  datatable(extensions = 'Buttons',
+          options = list(dom = 'Bfrtip', 
+                         buttons = c('excel', "csv")))
+
+df8.validate_predict_int %>% 
+  summarise(n = n(), 
+            num_outsite_interval = sum(outsite_predict_int), 
+            prop = num_outsite_interval/n)
+
+#' **Conclusion**: the prediction intervals may in fact be a bit conservative (too
+#' wide). That's why a smaller proportion of the real data is falling outside
+#' the interval (3% versus 5%).
+#' 
+#' Of course, it could just be sampling variability due to a small dataset. 
 
 
 # 10) write outputs: ---------

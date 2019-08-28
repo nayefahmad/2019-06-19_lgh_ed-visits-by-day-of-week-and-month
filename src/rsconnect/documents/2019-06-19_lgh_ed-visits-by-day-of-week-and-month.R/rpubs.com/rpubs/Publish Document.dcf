@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/522748/41b34bc9b28e4eacba890c3f56f14a49
+bundleId: https://api.rpubs.com/api/v1/document/522748/41b34bc9b28e4eacba890c3f56f14a49
+url: http://rpubs.com/nayefahmad/522748/edit
+when: 1566950988.53527
